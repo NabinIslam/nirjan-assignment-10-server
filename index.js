@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+require("dotenv").config();
 
 const port = process.env.PORT || 5000;
 
@@ -9,8 +10,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const uri =
-  "mongodb+srv://nirjan:V8iVREF0amDvbylZ@cluster0.lqyancf.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+const uri = process.env.MONGODBURI;
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -79,9 +79,15 @@ async function run() {
 
     app.get("/visa-applications/:email", async (req, res) => {
       const email = req.params.email;
-      const applicationsByEmail = await visaApplications
-        .find({ email })
-        .toArray();
+      const { country_name } = req.query; // Get the country_name query parameter
+
+      // Build the filter object dynamically
+      const filter = { email };
+      if (country_name) {
+        filter["visaInfo.country_name"] = country_name;
+      }
+
+      const applicationsByEmail = await visaApplications.find(filter).toArray();
       res.send(applicationsByEmail);
     });
 
